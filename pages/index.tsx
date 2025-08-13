@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -59,7 +58,7 @@ export default function FAMNudger() {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const response = await axios.get("/api/openfoodfacts");
+      const response = await axios.get("http://localhost:8000/api/products");
       setProducts(response.data.products);
     } catch (err) {
       console.error("Error fetching product data", err);
