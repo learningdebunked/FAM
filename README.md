@@ -4,10 +4,40 @@ A GenAI-powered web application that helps users make healthier grocery choices 
 
 ## 💡 Features
 - ✅ Lifestyle question toggles (hypertension, diabetes, child safety, pregnancy)
-- ✅ Live FAM scoring based on flagged ingredients
+- ✅ Smart ingredient-based scoring system
+- ✅ Personalized product recommendations
+- ✅ Clear health impact explanations
 - ✅ Data sourced from OpenFoodFacts (beverages, snacks, cereals)
-- ✅ Rule-based ingredient classification
 - 🧠 Optional LLM-based classification for advanced analysis
+
+## 🎯 Smart Recommendation System
+
+### How Recommendations Work
+1. **Health Profile Analysis**
+   - Users select relevant health conditions for their household
+   - Each condition maps to specific ingredient risks and benefits
+
+2. **Ingredient Scoring**
+   - Each product starts with a base score of 50
+   - **Positive matches** (e.g., whole grains for fiber focus): +10 points
+   - **Negative matches** (e.g., sugar for diabetics): -15 points
+   - Final scores are normalized to 0-100 range
+
+3. **Risk Assessment**
+   - 🟢 **Good (75-100%)**: Highly recommended
+   - 🟡 **Okay (50-74%)**: Moderately recommended
+   - 🔴 **Risky (0-49%)**: Not recommended
+
+4. **Transparent Reasoning**
+   - Each recommendation includes specific reasons
+   - Highlights both beneficial and concerning ingredients
+   - Explains how ingredients relate to selected health profiles
+
+### Example Scenarios
+- **Diabetic Household**: Reduces scores for high-sugar products, highlights fiber content
+- **Hypertension**: Flags high-sodium ingredients, suggests low-sodium alternatives
+- **Children Under 12**: Identifies and flags artificial additives and colorings
+- **Pregnancy**: Cautions against certain ingredients while ensuring proper nutrition
 
 ## 🏗️ Architecture
 - **Frontend**: React + Next.js
