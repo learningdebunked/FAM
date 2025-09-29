@@ -1,0 +1,62 @@
+{
+  "test_cases": [
+    {
+      "id": "test_001",
+      "ingredients": ["high fructose corn syrup", "artificial colors", "red 40"],
+      "health_profiles": ["diabetic", "child"],
+      "expected_output": {
+        "risk_flags": [
+          {
+            "ingredient": "high fructose corn syrup",
+            "risk_level": "high",
+            "concern": "May cause blood sugar spikes",
+            "affected_profiles": ["diabetic"]
+          },
+          {
+            "ingredient": "artificial colors",
+            "risk_level": "medium",
+            "concern": "May cause hyperactivity in children",
+            "affected_profiles": ["child"]
+          },
+          {
+            "ingredient": "red 40",
+            "risk_level": "medium",
+            "concern": "Artificial color that may cause allergic reactions",
+            "affected_profiles": ["child"]
+          }
+        ],
+        "overall_risk_score": 75,
+        "recommendations": [
+          "Consider products with natural sweeteners instead of high fructose corn syrup",
+          "Look for products without artificial colors"
+        ]
+      }
+    },
+    {
+      "id": "test_002",
+      "ingredients": ["organic cane sugar", "natural flavors", "sea salt"],
+      "health_profiles": ["hypertensive", "diabetic"],
+      "expected_output": {
+        "risk_flags": [
+          {
+            "ingredient": "organic cane sugar",
+            "risk_level": "medium",
+            "concern": "High sugar content may affect blood sugar levels",
+            "affected_profiles": ["diabetic"]
+          },
+          {
+            "ingredient": "sea salt",
+            "risk_level": "low",
+            "concern": "Sodium content may affect blood pressure",
+            "affected_profiles": ["hypertensive"]
+          }
+        ],
+        "overall_risk_score": 40,
+        "recommendations": [
+          "Monitor portion size due to sugar content",
+          "Be mindful of sodium intake"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,134 @@
+{
+  "test_cases": [
+    {
+      "id": "test_001",
+      "ingredients": ["high fructose corn syrup", "artificial colors", "red 40"],
+      "health_profiles": ["diabetic", "child"],
+      "expected_output": {
+        "risk_flags": [
+          {
+            "ingredient": "high fructose corn syrup",
+            "risk_level": "high",
+            "concern": "May cause blood sugar spikes",
+            "affected_profiles": ["diabetic"]
+          },
+          {
+            "ingredient": "artificial colors",
+            "risk_level": "medium",
+            "concern": "May cause hyperactivity in children",
+            "affected_profiles": ["child"]
+          },
+          {
+            "ingredient": "red 40",
+            "risk_level": "medium",
+            "concern": "Artificial color that may cause allergic reactions",
+            "affected_profiles": ["child"]
+          }
+        ],
+        "overall_risk_score": 75,
+        "recommendations": [
+          "Consider products with natural sweeteners instead of high fructose corn syrup",
+          "Look for products without artificial colors"
+        ]
+      }
+    },
+    {
+      "id": "test_002",
+      "ingredients": ["organic cane sugar", "natural flavors", "sea salt"],
+      "health_profiles": ["hypertensive", "diabetic"],
+      "expected_output": {
+        "risk_flags": [
+          {
+            "ingredient": "organic cane sugar",
+            "risk_level": "medium",
+            "concern": "High sugar content may affect blood sugar levels",
+            "affected_profiles": ["diabetic"]
+          },
+          {
+            "ingredient": "sea salt",
+            "risk_level": "low",
+            "concern": "Sodium content may affect blood pressure",
+            "affected_profiles": ["hypertensive"]
+          }
+        ],
+        "overall_risk_score": 40,
+        "recommendations": [
+          "Monitor portion size due to sugar content",
+          "Be mindful of sodium intake"
+        ]
+      }
+    },
+    {
+      "id": "test_003",
+      "ingredients": ["aspartame", "acesulfame potassium", "artificial flavors"],
+      "health_profiles": ["migraine"],
+      "expected_output": {
+        "risk_flags": [
+          {
+            "ingredient": "aspartame",
+            "risk_level": "high",
+            "concern": "May trigger migraines in sensitive individuals",
+            "affected_profiles": ["migraine"]
+          },
+          {
+            "ingredient": "acesulfame potassium",
+            "risk_level": "medium",
+            "concern": "Artificial sweetener that may affect blood sugar levels",
+            "affected_profiles": []
+          }
+        ],
+        "overall_risk_score": 65,
+        "recommendations": [
+          "Consider natural sweeteners instead of artificial ones",
+          "Monitor for any adverse reactions"
+        ]
+      }
+    },
+    {
+      "id": "test_004",
+      "ingredients": ["sucralose", "maltodextrin", "sodium nitrate"],
+      "health_profiles": ["digestive_issues"],
+      "expected_output": {
+        "risk_flags": [
+          {
+            "ingredient": "sucralose",
+            "risk_level": "medium",
+            "concern": "May cause digestive discomfort in some individuals",
+            "affected_profiles": ["digestive_issues"]
+          },
+          {
+            "ingredient": "sodium nitrate",
+            "risk_level": "high",
+            "concern": "Preservative that may cause digestive issues",
+            "affected_profiles": ["digestive_issues"]
+          }
+        ],
+        "overall_risk_score": 70,
+        "recommendations": [
+          "Consider nitrate-free alternatives",
+          "Monitor for any digestive discomfort"
+        ]
+      }
+    },
+    {
+      "id": "test_005",
+      "ingredients": ["caffeine", "taurine", "b-vitamins"],
+      "health_profiles": ["anxiety", "heart_conditions"],
+      "expected_output": {
+        "risk_flags": [
+          {
+            "ingredient": "caffeine",
+            "risk_level": "high",
+            "concern": "May increase heart rate and anxiety",
+            "affected_profiles": ["anxiety", "heart_conditions"]
+          }
+        ],
+        "overall_risk_score": 80,
+        "recommendations": [
+          "Consider caffeine-free alternatives",
+          "Consult with a healthcare provider if you have heart conditions"
+        ]
+      }
+    }
+  ]
+}

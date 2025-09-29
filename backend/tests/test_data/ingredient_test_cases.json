@@ -1,0 +1,139 @@
+{
+  "test_cases": [
+    {
+      "id": "test_001",
+      "product_name": "Generic Soda",
+      "ingredients_raw": "carbonated water, high fructose corn syrup, artificial colors, red 40, natural flavors, phosphoric acid",
+      "ground_truth": {
+        "risk_flags": ["HFCS", "Red 40"],
+        "should_not_flag": ["Aspartame", "Sucralose", "Sodium nitrate", "Caffeine"]
+      }
+    },
+    {
+      "id": "test_002",
+      "product_name": "Diet Cola",
+      "ingredients_raw": "carbonated water, caramel color, aspartame, phosphoric acid, potassium benzoate, caffeine, natural flavors",
+      "ground_truth": {
+        "risk_flags": ["Aspartame", "Caffeine"],
+        "should_not_flag": ["HFCS", "Red 40", "Sucralose", "Sodium nitrate"]
+      }
+    },
+    {
+      "id": "test_003",
+      "product_name": "Sugar-Free Gum",
+      "ingredients_raw": "sorbitol, gum base, sucralose, natural and artificial flavors, glycerin",
+      "ground_truth": {
+        "risk_flags": ["Sucralose"],
+        "should_not_flag": ["Aspartame", "HFCS", "Red 40", "Sodium nitrate", "Caffeine"]
+      }
+    },
+    {
+      "id": "test_004",
+      "product_name": "Processed Deli Meat",
+      "ingredients_raw": "pork, water, salt, sodium nitrate, sodium nitrite, sugar, spices",
+      "ground_truth": {
+        "risk_flags": ["Sodium nitrate"],
+        "should_not_flag": ["Aspartame", "HFCS", "Red 40", "Sucralose", "Caffeine"]
+      }
+    },
+    {
+      "id": "test_005",
+      "product_name": "Fruit Cereal",
+      "ingredients_raw": "corn flour, sugar, wheat flour, oat flour, red 40, yellow 5, blue 1, natural flavors, salt",
+      "ground_truth": {
+        "risk_flags": ["Red 40"],
+        "should_not_flag": ["Aspartame", "HFCS", "Sucralose", "Sodium nitrate", "Caffeine"]
+      }
+    },
+    {
+      "id": "test_006",
+      "product_name": "Energy Drink",
+      "ingredients_raw": "carbonated water, high fructose corn syrup, caffeine, taurine, citric acid, natural flavors",
+      "ground_truth": {
+        "risk_flags": ["HFCS", "Caffeine"],
+        "should_not_flag": ["Aspartame", "Red 40", "Sucralose", "Sodium nitrate"]
+      }
+    },
+    {
+      "id": "test_007",
+      "product_name": "Organic Crackers",
+      "ingredients_raw": "organic wheat flour, organic sunflower oil, sea salt, organic cane sugar, baking soda",
+      "ground_truth": {
+        "risk_flags": [],
+        "should_not_flag": ["Aspartame", "HFCS", "Red 40", "Sucralose", "Sodium nitrate", "Caffeine"]
+      }
+    },
+    {
+      "id": "test_008",
+      "product_name": "Multiple Risk Soda",
+      "ingredients_raw": "carbonated water, high fructose corn syrup, aspartame, red 40 lake, caffeine, sodium benzoate",
+      "ground_truth": {
+        "risk_flags": ["HFCS", "Aspartame", "Red 40", "Caffeine"],
+        "should_not_flag": ["Sucralose", "Sodium nitrate"]
+      }
+    },
+    {
+      "id": "test_009",
+      "product_name": "Iced Tea Mix",
+      "ingredients_raw": "sugar, citric acid, instant tea, aspartame, acesulfame potassium, natural lemon flavor",
+      "ground_truth": {
+        "risk_flags": ["Aspartame"],
+        "should_not_flag": ["HFCS", "Red 40", "Sucralose", "Sodium nitrate", "Caffeine"]
+      }
+    },
+    {
+      "id": "test_010",
+      "product_name": "Chocolate Bar",
+      "ingredients_raw": "sugar, chocolate, cocoa butter, milk, soy lecithin, artificial flavors, caffeine",
+      "ground_truth": {
+        "risk_flags": ["Caffeine"],
+        "should_not_flag": ["Aspartame", "HFCS", "Red 40", "Sucralose", "Sodium nitrate"]
+      }
+    },
+    {
+      "id": "test_011",
+      "product_name": "Low-Calorie Yogurt",
+      "ingredients_raw": "cultured pasteurized grade A nonfat milk, modified food starch, sucralose, natural flavors, vitamin A palmitate, vitamin D3",
+      "ground_truth": {
+        "risk_flags": ["Sucralose"],
+        "should_not_flag": ["Aspartame", "HFCS", "Red 40", "Sodium nitrate", "Caffeine"]
+      }
+    },
+    {
+      "id": "test_012",
+      "product_name": "Bacon Bits",
+      "ingredients_raw": "textured vegetable protein (soy flour, caramel color, red 40), salt, natural and artificial flavor, sodium nitrate",
+      "ground_truth": {
+        "risk_flags": ["Red 40", "Sodium nitrate"],
+        "should_not_flag": ["Aspartame", "HFCS", "Sucralose", "Caffeine"]
+      }
+    },
+    {
+      "id": "test_013",
+      "product_name": "Fruit Snacks",
+      "ingredients_raw": "corn syrup, sugar, modified corn starch, fruit juice concentrate, citric acid, sodium citrate, natural and artificial flavors, red 40, yellow 5, blue 1",
+      "ground_truth": {
+        "risk_flags": ["Red 40"],
+        "should_not_flag": ["Aspartame", "HFCS", "Sucralose", "Sodium nitrate", "Caffeine"]
+      }
+    },
+    {
+      "id": "test_014",
+      "product_name": "Decaf Coffee",
+      "ingredients_raw": "decaffeinated coffee",
+      "ground_truth": {
+        "risk_flags": [],
+        "should_not_flag": ["Aspartame", "HFCS", "Red 40", "Sucralose", "Sodium nitrate", "Caffeine"]
+      }
+    },
+    {
+      "id": "test_015",
+      "product_name": "Energy Chews",
+      "ingredients_raw": "tapioca syrup, cane sugar, pectin, citric acid, sodium citrate, caffeine, natural flavors, coconut oil, carnauba wax, red 40, blue 1",
+      "ground_truth": {
+        "risk_flags": ["Caffeine", "Red 40"],
+        "should_not_flag": ["Aspartame", "HFCS", "Sucralose", "Sodium nitrate"]
+      }
+    }
+  ]
+}

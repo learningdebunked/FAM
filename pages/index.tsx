@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
 import axios from "axios";
 
 const healthQuestions = [
@@ -50,7 +52,7 @@ const riskMap = {
   "salt": ["hypertensive"],
   "monosodium glutamate": ["child"],
   "msg": ["child"],
-  "red 40 lake": ["child"],
+  "red 40": ["child"],
   "yellow 6": ["child"],
   "caramel color": ["general"],
   "whole grain": ["fiber_focused", "positive"],
@@ -63,11 +65,25 @@ const riskMap = {
 const getRecommendationReason = (product, profileTags) => {
   const reasons = [];
   
+  // Convert all profile tags to lowercase for case-insensitive comparison
+  const lowerProfileTags = profileTags.map(tag => tag.toLowerCase());
+  
   product.ingredients.forEach(ing => {
-    const lowerIng = ing.toLowerCase();
+    const lowerIng = ing.toLowerCase().trim();
     Object.entries(riskMap).forEach(([ingredient, tags]) => {
-      if (lowerIng.includes(ingredient)) {
-        const matchedTags = tags.filter(tag => profileTags.includes(tag));
+      // Split the ingredient by spaces to get individual words
+      const ingredientWords = ingredient.toLowerCase().split(/\s+/);
+      
+      // Check if any word from the risk map matches the ingredient
+      const hasMatch = ingredientWords.some(word => 
+        lowerIng.split(/\s+/).some(ingWord => ingWord === word)
+      );
+      
+      if (hasMatch) {
+        const matchedTags = tags.filter(tag => 
+          lowerProfileTags.includes(tag.toLowerCase())
+        );
+        
         if (matchedTags.length > 0) {
           matchedTags.forEach(tag => {
             if (tag === 'positive') {
@@ -89,12 +105,24 @@ const evaluateProduct = (product, profileTags) => {
   let flagged = [];
   let benefits = [];
   
+  // Convert all profile tags to lowercase for case-insensitive comparison
+  const lowerProfileTags = profileTags.map(tag => tag.toLowerCase());
+  
   product.ingredients.forEach((ing) => {
-    const lowerIng = ing.toLowerCase();
+    const lowerIng = ing.toLowerCase().trim();
     Object.entries(riskMap).forEach(([ingredient, tags]) => {
-      if (lowerIng.includes(ingredient)) {
+      // Split the ingredient by spaces to get individual words
+      const ingredientWords = ingredient.toLowerCase().split(/\s+/);
+      
+      // Check if any word from the risk map matches the ingredient
+      const hasMatch = ingredientWords.some(word => 
+        lowerIng.split(/\s+/).some(ingWord => ingWord === word)
+      );
+      
+      if (hasMatch) {
         tags.forEach((t) => {
-          if (profileTags.includes(t)) {
+          const lowerT = t.toLowerCase();
+          if (lowerProfileTags.includes(lowerT)) {
             if (t === "positive") {
               score += 10;
               benefits.push(ingredient);
@@ -120,6 +148,7 @@ export default function FAMNudger() {
   const [loading, setLoading] = useState(false);
   const [showRecommendations, setShowRecommendations] = useState(false);
   const [showOnlyGreen, setShowOnlyGreen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleToggle = (key, value) => {
     setProfile({ ...profile, [key]: value });
@@ -187,46 +216,69 @@ export default function FAMNudger() {
 
   return (
     <div className="p-6 space-y-6 max-w-6xl mx-auto">
-      <div className="space-y-2">
+      <div className="space-y-4">
         <h1 className="text-3xl font-bold">Food-as-Medicine Recommender</h1>
         <p className="text-muted-foreground">
-          Select your health considerations to get personalized food recommendations
+          Search for food items and get personalized recommendations based on your health profile
         </p>
+        
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Search for a food item..."
+            className="w-full pl-10 py-6 text-base"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
       </div>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Your Health Profile</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+
+      {/* Health Questions Section */}
+      <div className="space-y-4">
+        <h2 className="text-xl font-semibold">Your Health Profile</h2>
+        <p className="text-muted-foreground">
+          Select your health considerations to get personalized recommendations
+        </p>
+        
+        <div className="grid gap-4 md:grid-cols-2">
           {healthQuestions.map((q) => (
-            <div key={q.key} className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50">
-              <div className="space-y-1">
-                <div className="flex items-center space-x-2">
-                  <span className="text-xl">{q.icon}</span>
-                  <Label className="text-base" htmlFor={q.key}>
-                    {q.text}
-                  </Label>
+            <Card key={q.key} className="hover:shadow-md transition-shadow">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <span className="text-2xl">{q.icon}</span>
+                    <div>
+                      <Label className="text-base font-medium" htmlFor={q.key}>
+                        {q.text}
+                      </Label>
+                      <p className="text-sm text-muted-foreground">{q.description}</p>
+                    </div>
+                  </div>
+                  <Switch
+                    id={q.key}
+                    checked={!!profile[q.key]}
+                    onCheckedChange={(val) => handleToggle(q.key, val)}
+                  />
                 </div>
-                <p className="text-sm text-muted-foreground">{q.description}</p>
-              </div>
-              <Switch
-                id={q.key}
-                checked={!!profile[q.key]}
-                onCheckedChange={(val) => handleToggle(q.key, val)}
-              />
-            </div>
+              </CardContent>
+            </Card>
           ))}
-          
-          <div className="flex items-center justify-between p-3 rounded-lg">
+        </div>
+      </div>
+
+      {/* Show only green products toggle */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <div className="flex items-center space-x-2">
-                <span className="text-xl">🌿</span>
-                <Label className="text-base" htmlFor="show-only-green">
-                  Show only green (safe) products
-                </Label>
-              </div>
-              <p className="text-sm text-muted-foreground">Display only products with no concerning ingredients</p>
+              <Label className="text-base font-medium" htmlFor="show-only-green">
+                Show only safe products
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                Display only products with no concerning ingredients
+              </p>
             </div>
             <Switch
               id="show-only-green"
@@ -234,20 +286,20 @@ export default function FAMNudger() {
               onCheckedChange={setShowOnlyGreen}
             />
           </div>
-          
-          <Button 
-            className="w-full mt-6 py-6 text-lg" 
-            onClick={runNudge}
-            disabled={loading || !hasSelections}
-          >
-            {loading ? (
-              "Loading recommendations..."
-            ) : (
-              `Generate ${hasSelections ? activeTags.length : ''} ${hasSelections ? 'Personalized ' : ''}Recommendations`
-            )}
-          </Button>
         </CardContent>
       </Card>
+
+      <Button 
+        className="w-full py-6 text-lg font-medium" 
+        onClick={runNudge}
+        disabled={loading || !hasSelections}
+      >
+        {loading ? (
+          "Loading recommendations..."
+        ) : (
+          `Generate ${hasSelections ? activeTags.length : ''} ${hasSelections ? 'Personalized ' : ''}Recommendations`
+        )}
+      </Button>
 
       {showRecommendations && (
         <div className="space-y-4">

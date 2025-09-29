@@ -1,0 +1,215 @@
+{
+  "metrics": {
+    "per_flag": {
+      "Aspartame": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 3,
+        "support": 3
+      },
+      "Red 40": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 6,
+        "support": 6
+      },
+      "HFCS": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 3,
+        "support": 3
+      },
+      "Sucralose": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 2,
+        "support": 2
+      },
+      "Sodium nitrate": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 2,
+        "support": 2
+      },
+      "Caffeine": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 5,
+        "support": 5
+      }
+    },
+    "macro_avg": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 21
+    },
+    "weighted_avg": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 21
+    }
+  },
+  "individual_results": [
+    {
+      "id": "test_001",
+      "product_name": "Generic Soda",
+      "predicted": [],
+      "actual": [
+        "HFCS",
+        "Red 40"
+      ],
+      "correct": false
+    },
+    {
+      "id": "test_002",
+      "product_name": "Diet Cola",
+      "predicted": [],
+      "actual": [
+        "Aspartame",
+        "Caffeine"
+      ],
+      "correct": false
+    },
+    {
+      "id": "test_003",
+      "product_name": "Sugar-Free Gum",
+      "predicted": [],
+      "actual": [
+        "Sucralose"
+      ],
+      "correct": false
+    },
+    {
+      "id": "test_004",
+      "product_name": "Processed Deli Meat",
+      "predicted": [],
+      "actual": [
+        "Sodium nitrate"
+      ],
+      "correct": false
+    },
+    {
+      "id": "test_005",
+      "product_name": "Fruit Cereal",
+      "predicted": [],
+      "actual": [
+        "Red 40"
+      ],
+      "correct": false
+    },
+    {
+      "id": "test_006",
+      "product_name": "Energy Drink",
+      "predicted": [],
+      "actual": [
+        "Caffeine",
+        "HFCS"
+      ],
+      "correct": false
+    },
+    {
+      "id": "test_007",
+      "product_name": "Organic Crackers",
+      "predicted": [],
+      "actual": [],
+      "correct": true
+    },
+    {
+      "id": "test_008",
+      "product_name": "Multiple Risk Soda",
+      "predicted": [],
+      "actual": [
+        "Aspartame",
+        "Caffeine",
+        "HFCS",
+        "Red 40"
+      ],
+      "correct": false
+    },
+    {
+      "id": "test_009",
+      "product_name": "Iced Tea Mix",
+      "predicted": [],
+      "actual": [
+        "Aspartame"
+      ],
+      "correct": false
+    },
+    {
+      "id": "test_010",
+      "product_name": "Chocolate Bar",
+      "predicted": [],
+      "actual": [
+        "Caffeine"
+      ],
+      "correct": false
+    },
+    {
+      "id": "test_011",
+      "product_name": "Low-Calorie Yogurt",
+      "predicted": [],
+      "actual": [
+        "Sucralose"
+      ],
+      "correct": false
+    },
+    {
+      "id": "test_012",
+      "product_name": "Bacon Bits",
+      "predicted": [],
+      "actual": [
+        "Red 40",
+        "Sodium nitrate"
+      ],
+      "correct": false
+    },
+    {
+      "id": "test_013",
+      "product_name": "Fruit Snacks",
+      "predicted": [],
+      "actual": [
+        "Red 40"
+      ],
+      "correct": false
+    },
+    {
+      "id": "test_014",
+      "product_name": "Decaf Coffee",
+      "predicted": [],
+      "actual": [],
+      "correct": true
+    },
+    {
+      "id": "test_015",
+      "product_name": "Energy Chews",
+      "predicted": [],
+      "actual": [
+        "Caffeine",
+        "Red 40"
+      ],
+      "correct": false
+    }
+  ],
+  "total_cases": 15,
+  "test_data_path": "/Users/kapilsindhu/Documents/Kapil-Important-Doc/EB1/FAM/backend/evaluation/../tests/test_data/ingredient_test_cases.json"
+}
