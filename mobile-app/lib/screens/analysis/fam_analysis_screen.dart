@@ -707,6 +707,9 @@ class _FAMAnalysisScreenState extends State<FAMAnalysisScreen>
   Widget _buildOverviewTab(dynamic product, FAMAnalysis? analysis) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
+      physics: const AlwaysScrollableScrollPhysics(
+        parent: BouncingScrollPhysics(),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -995,6 +998,9 @@ class _FAMAnalysisScreenState extends State<FAMAnalysisScreen>
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
+      physics: const AlwaysScrollableScrollPhysics(
+        parent: BouncingScrollPhysics(),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1300,6 +1306,9 @@ class _FAMAnalysisScreenState extends State<FAMAnalysisScreen>
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
+      physics: const AlwaysScrollableScrollPhysics(
+        parent: BouncingScrollPhysics(),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1553,6 +1562,9 @@ class _FAMAnalysisScreenState extends State<FAMAnalysisScreen>
 
         return SingleChildScrollView(
           padding: const EdgeInsets.all(16),
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

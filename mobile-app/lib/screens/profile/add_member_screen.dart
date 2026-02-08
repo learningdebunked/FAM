@@ -65,6 +65,9 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
         key: _formKey,
         child: ListView(
           padding: const EdgeInsets.all(16),
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
+          ),
           children: [
             _buildBasicInfoSection(),
             const SizedBox(height: 24),

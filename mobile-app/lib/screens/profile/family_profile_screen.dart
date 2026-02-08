@@ -108,6 +108,9 @@ class FamilyProfileScreen extends StatelessWidget {
 
     return ListView(
       padding: const EdgeInsets.all(16),
+      physics: const AlwaysScrollableScrollPhysics(
+        parent: BouncingScrollPhysics(),
+      ),
       children: [
         _buildSummaryCard(members),
         const SizedBox(height: 20),

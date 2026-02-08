@@ -159,6 +159,9 @@ class _AlternativesScreenState extends State<AlternativesScreen> {
   Widget _buildAlternativesList(product, List<HealthyAlternative> alternatives) {
     return ListView(
       padding: const EdgeInsets.all(16),
+      physics: const AlwaysScrollableScrollPhysics(
+        parent: BouncingScrollPhysics(),
+      ),
       children: [
         _buildCurrentProductCard(product),
         const SizedBox(height: 16),

@@ -44,6 +44,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
         children: [
           _buildApiKeySection(),
           const SizedBox(height: 24),
