@@ -307,22 +307,49 @@ class ProductService:
         """
         Calculate how well the product fits user's health goals (0-100)
         Higher = better fit
+        
+        This is the key personalization component - it heavily penalizes
+        ingredients that are specifically risky for the user's family profiles.
         """
         if not health_profiles:
             return 50  # Neutral if no profile
         
+        profiles_lower = [p.lower() for p in health_profiles]
         score = 100
         
         # Penalize for relevant risk flags
         relevant_flags = [f for f in risk_flags if f.get('is_relevant_to_user')]
         
         for flag in relevant_flags:
+            # Calculate how many family profiles are affected by this ingredient
+            affected = flag.get('affected_profiles', [])
+            affected_count = sum(1 for p in affected if p.lower() in profiles_lower)
+            
+            # More affected profiles = higher penalty
+            profile_multiplier = 1.0 + (0.2 * affected_count)
+            
             if flag['risk_level'] == 'high':
-                score -= 30
+                score -= int(30 * profile_multiplier)
             elif flag['risk_level'] == 'medium':
-                score -= 15
+                score -= int(15 * profile_multiplier)
             elif flag['risk_level'] == 'low':
-                score -= 5
+                score -= int(5 * profile_multiplier)
+        
+        # Additional penalties for specific vulnerable profiles
+        vulnerable_profiles = ['child', 'toddler', 'pregnant', 'senior']
+        has_vulnerable = any(p in profiles_lower for p in vulnerable_profiles)
+        
+        if has_vulnerable and relevant_flags:
+            # Extra 10% penalty for vulnerable family members
+            score = int(score * 0.9)
+        
+        # Bonus for products with no relevant flags for specific conditions
+        condition_profiles = ['diabetic', 'cardiac', 'hypertensive', 'celiac', 'lactoseintolerant']
+        has_conditions = any(p in profiles_lower for p in condition_profiles)
+        
+        if has_conditions and not relevant_flags:
+            # Bonus for condition-safe products
+            score = min(100, score + 10)
         
         return max(0, score)
     
@@ -342,34 +369,88 @@ class ProductService:
     
     def _generate_recommendations(self, risk_flags: List[Dict], 
                                   health_profiles: List[str]) -> List[str]:
-        """Generate recommendations based on flagged ingredients"""
+        """Generate personalized recommendations based on flagged ingredients and family profiles"""
         recommendations = []
+        profiles_lower = [p.lower() for p in health_profiles]
         
         if not risk_flags:
-            recommendations.append("No significant concerns found for your health profile.")
+            if health_profiles:
+                recommendations.append(
+                    f"No significant concerns found for your family profile ({', '.join(health_profiles)})."
+                )
+            else:
+                recommendations.append("No significant concerns found.")
             return recommendations
         
         # Count by risk level
         high_risk = [f for f in risk_flags if f['risk_level'] == 'high']
-        medium_risk = [f for f in risk_flags if f['risk_level'] == 'medium']
         relevant_flags = [f for f in risk_flags if f.get('is_relevant_to_user')]
         
         if high_risk:
             recommendations.append(
-                f"Found {len(high_risk)} high-risk ingredient(s). "
+                f"⚠️ Found {len(high_risk)} high-risk ingredient(s). "
                 "Consider avoiding this product or finding alternatives."
             )
         
+        # Profile-specific warnings
         if relevant_flags:
             profiles_affected = set()
             for f in relevant_flags:
                 for p in f.get('affected_profiles', []):
-                    if p.lower() in [hp.lower() for hp in health_profiles]:
+                    if p.lower() in profiles_lower:
                         profiles_affected.add(p)
             
             if profiles_affected:
+                profile_names = {
+                    'child': 'children',
+                    'toddler': 'toddlers',
+                    'pregnant': 'pregnant women',
+                    'senior': 'seniors',
+                    'diabetic': 'diabetics',
+                    'cardiac': 'those with heart conditions',
+                    'hypertensive': 'those with high blood pressure',
+                    'celiac': 'those with celiac disease',
+                    'lactoseintolerant': 'those with lactose intolerance',
+                    'glutensensitive': 'those with gluten sensitivity',
+                }
+                
+                affected_names = [profile_names.get(p.lower(), p) for p in profiles_affected]
                 recommendations.append(
-                    f"This product contains ingredients that may affect: {', '.join(profiles_affected)}."
+                    f"🚨 This product contains ingredients specifically concerning for: {', '.join(affected_names)}."
+                )
+        
+        # Child-specific warnings
+        if any(p in profiles_lower for p in ['child', 'toddler']):
+            child_flags = [f for f in relevant_flags if 
+                          any(p in ['child', 'toddler'] for p in f.get('affected_profiles', []))]
+            if child_flags:
+                recommendations.append(
+                    "👶 Contains ingredients linked to hyperactivity or developmental concerns in children."
+                )
+        
+        # Pregnancy-specific warnings
+        if 'pregnant' in profiles_lower:
+            preg_flags = [f for f in relevant_flags if 'pregnant' in f.get('affected_profiles', [])]
+            if preg_flags:
+                recommendations.append(
+                    "🤰 Contains ingredients that may affect fetal development. Consult your healthcare provider."
+                )
+        
+        # Diabetic-specific warnings
+        if 'diabetic' in profiles_lower:
+            sugar_flags = [f for f in risk_flags if f.get('category') == 'high_sugar']
+            if sugar_flags:
+                recommendations.append(
+                    "🩺 High glycemic ingredients detected. May cause blood sugar spikes."
+                )
+        
+        # Cardiac-specific warnings
+        if any(p in profiles_lower for p in ['cardiac', 'hypertensive']):
+            heart_flags = [f for f in relevant_flags if 
+                          any(p in ['cardiac', 'hypertensive'] for p in f.get('affected_profiles', []))]
+            if heart_flags:
+                recommendations.append(
+                    "❤️ Contains ingredients that may affect cardiovascular health."
                 )
         
         # Specific recommendations by category
@@ -385,7 +466,7 @@ class ProductService:
                 "Contains artificial dyes. Look for products with natural colorings."
             )
         
-        if 'high_sugar' in categories:
+        if 'high_sugar' in categories and 'diabetic' not in profiles_lower:
             recommendations.append(
                 "High in added sugars. Consider low-sugar or sugar-free alternatives."
             )
