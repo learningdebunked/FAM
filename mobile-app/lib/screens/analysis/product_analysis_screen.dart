@@ -30,8 +30,13 @@ class _ProductAnalysisScreenState extends State<ProductAnalysisScreen> {
   }
 
   Future<void> _loadAnalysis() async {
-    final provider = context.read<ProductProvider>();
-    await provider.analyzeProduct();
+    final productProvider = context.read<ProductProvider>();
+    final familyProvider = context.read<FamilyProvider>();
+    
+    // Pass family members to product provider for personalized analysis
+    productProvider.setFamilyMembers(familyProvider.members);
+    
+    await productProvider.analyzeProduct();
   }
 
   @override

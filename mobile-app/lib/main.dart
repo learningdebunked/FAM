@@ -6,6 +6,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'providers/family_provider.dart';
 import 'providers/product_provider.dart';
 import 'providers/feedback_provider.dart';
+import 'services/backend_service.dart';
 import 'config/routes.dart';
 import 'config/theme.dart';
 
@@ -14,6 +15,9 @@ void main() async {
   
   // Initialize Hive for local storage
   await Hive.initFlutter();
+  
+  // Initialize backend service
+  BackendService().initialize();
   
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([

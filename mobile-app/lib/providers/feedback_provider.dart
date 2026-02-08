@@ -1,11 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 import '../models/feedback.dart';
+import '../services/backend_service.dart';
 
 class FeedbackProvider extends ChangeNotifier {
   final List<UserFeedback> _feedbackList = [];
   bool _isSubmitting = false;
   String? _error;
+  final BackendService _backendService = BackendService();
 
   List<UserFeedback> get feedbackList => _feedbackList;
   bool get isSubmitting => _isSubmitting;
@@ -39,6 +41,12 @@ class FeedbackProvider extends ChangeNotifier {
 
     _feedbackList.add(feedback);
     notifyListeners();
+    
+    // Submit to backend asynchronously
+    _backendService.submitFeedback(
+      productId: productId,
+      type: type,
+    );
 
     return feedback;
   }
@@ -62,8 +70,13 @@ class FeedbackProvider extends ChangeNotifier {
           ingredientFlagged: ingredientFlagged,
         );
 
-        // TODO: Sync to backend
-        await Future.delayed(const Duration(milliseconds: 500));
+        // Submit detailed feedback to backend
+        await _backendService.submitFeedback(
+          productId: _feedbackList[index].productId,
+          type: _feedbackList[index].type,
+          comment: comment,
+          issues: ingredientFlagged != null ? [ingredientFlagged] : null,
+        );
         
         _feedbackList[index] = _feedbackList[index].copyWith(synced: true);
       }
@@ -80,8 +93,11 @@ class FeedbackProvider extends ChangeNotifier {
     
     for (final feedback in pending) {
       try {
-        // TODO: Sync to backend API
-        await Future.delayed(const Duration(milliseconds: 200));
+        await _backendService.submitFeedback(
+          productId: feedback.productId,
+          type: feedback.type,
+          comment: feedback.comment,
+        );
         
         final index = _feedbackList.indexWhere((f) => f.id == feedback.id);
         if (index != -1) {

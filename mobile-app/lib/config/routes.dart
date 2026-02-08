@@ -6,6 +6,7 @@ import '../screens/profile/family_profile_screen.dart';
 import '../screens/profile/add_member_screen.dart';
 import '../screens/scanner/scanner_screen.dart';
 import '../screens/analysis/product_analysis_screen.dart';
+import '../screens/analysis/fam_analysis_screen.dart';
 import '../screens/alternatives/alternatives_screen.dart';
 import '../screens/onboarding/onboarding_screen.dart';
 import '../screens/settings/settings_screen.dart';
@@ -42,6 +43,15 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/analysis/:productId',
+      builder: (context, state) {
+        final productId = state.pathParameters['productId']!;
+        // Use the new FAM Analysis Screen with Open Food Facts / EWG style UI
+        return FAMAnalysisScreen(productId: productId);
+      },
+    ),
+    // Keep old analysis screen available at different route if needed
+    GoRoute(
+      path: '/analysis-simple/:productId',
       builder: (context, state) {
         final productId = state.pathParameters['productId']!;
         return ProductAnalysisScreen(productId: productId);
