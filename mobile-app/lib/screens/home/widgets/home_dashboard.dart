@@ -141,7 +141,7 @@ class HomeDashboard extends StatelessWidget {
                 subtitle: 'Quick lookup',
                 color: AppColors.secondary,
                 onTap: () {
-                  // Navigate to scanner
+                  context.push('/scanner');
                 },
               ),
             ),
@@ -153,7 +153,7 @@ class HomeDashboard extends StatelessWidget {
                 subtitle: 'OCR ingredients',
                 color: AppColors.primaryDark,
                 onTap: () {
-                  // Navigate to OCR scanner
+                  context.push('/scanner');
                 },
               ),
             ),
@@ -169,7 +169,7 @@ class HomeDashboard extends StatelessWidget {
                 subtitle: 'Find products',
                 color: Colors.orange,
                 onTap: () {
-                  // Navigate to search
+                  // TODO: Implement search screen
                 },
               ),
             ),
@@ -181,7 +181,7 @@ class HomeDashboard extends StatelessWidget {
                 subtitle: 'Past scans',
                 color: Colors.purple,
                 onTap: () {
-                  // Navigate to history
+                  // TODO: Implement history screen
                 },
               ),
             ),
