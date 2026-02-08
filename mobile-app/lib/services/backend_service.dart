@@ -125,6 +125,44 @@ class BackendService {
     }
   }
   
+  /// Unified tiered lookup - the optimal way to get product + analysis
+  /// 
+  /// Flow:
+  /// 1. Check local database first (fastest, <50ms)
+  /// 2. Fall back to OpenFoodFacts if not found (~200ms)
+  /// 3. Analyze using local risk database (fast)
+  /// 4. Fall back to AI analysis only if needed (~2-5s)
+  /// 
+  /// Returns complete product info with FAM analysis in one call.
+  Future<TieredLookupResult> tieredLookup({
+    String? barcode,
+    List<String>? ingredients,
+    required List<FamilyMember> familyMembers,
+    String? productName,
+    bool useAiFallback = true,
+  }) async {
+    try {
+      final healthProfiles = _buildHealthProfiles(familyMembers);
+      
+      final response = await _dio.post('/api/lookup', data: {
+        'barcode': barcode,
+        'ingredients': ingredients,
+        'health_profiles': healthProfiles,
+        'product_name': productName,
+        'use_ai_fallback': useAiFallback,
+      });
+      
+      if (response.statusCode == 200) {
+        return TieredLookupResult.fromJson(response.data, familyMembers);
+      }
+      
+      throw BackendException('Lookup failed with status: ${response.statusCode}');
+    } catch (e) {
+      if (e is BackendException) rethrow;
+      throw BackendException('Tiered lookup failed: $e');
+    }
+  }
+  
   Future<Map<String, dynamic>> getDatabaseStats() async {
     try {
       final response = await _dio.get('/api/db/stats');
@@ -363,4 +401,199 @@ class BackendException implements Exception {
   
   @override
   String toString() => message;
+}
+
+/// Result from the unified tiered lookup endpoint
+class TieredLookupResult {
+  final Product? product;
+  final AnalysisResult? analysis;
+  final List<HealthyAlternative> alternatives;
+  final String source; // 'local_database', 'openfoodfacts', 'manual_entry'
+  final bool cached;
+  final int lookupTimeMs;
+  
+  TieredLookupResult({
+    this.product,
+    this.analysis,
+    this.alternatives = const [],
+    required this.source,
+    this.cached = false,
+    this.lookupTimeMs = 0,
+  });
+  
+  factory TieredLookupResult.fromJson(
+    Map<String, dynamic> json,
+    List<FamilyMember> familyMembers,
+  ) {
+    // Parse product
+    Product? product;
+    final productData = json['product'] as Map<String, dynamic>?;
+    if (productData != null) {
+      product = Product(
+        id: productData['id']?.toString() ?? '',
+        barcode: productData['barcode'] ?? '',
+        name: productData['name'] ?? 'Unknown Product',
+        brand: productData['brand'],
+        ingredients: List<String>.from(productData['ingredients'] ?? []),
+        imageUrl: productData['image_url'],
+      );
+    }
+    
+    // Parse analysis
+    AnalysisResult? analysis;
+    final analysisData = json['analysis'] as Map<String, dynamic>?;
+    if (analysisData != null && product != null) {
+      analysis = _parseAnalysisFromLookup(product.id, analysisData, familyMembers);
+    }
+    
+    // Parse alternatives
+    final alternativesData = json['alternatives'] as List<dynamic>? ?? [];
+    final alternatives = alternativesData.map((a) => HealthyAlternative(
+      productId: a['product_id']?.toString() ?? '',
+      name: a['name'] ?? 'Unknown',
+      brand: a['brand'],
+      imageUrl: a['image_url'],
+      score: (a['score'] as num?)?.toDouble() ?? 0.0,
+      reason: a['reason'] ?? '',
+      benefits: List<String>.from(a['benefits'] ?? []),
+      priceDifference: (a['price_difference'] as num?)?.toDouble(),
+    )).toList();
+    
+    return TieredLookupResult(
+      product: product,
+      analysis: analysis,
+      alternatives: alternatives,
+      source: json['source'] ?? 'unknown',
+      cached: json['cached'] ?? false,
+      lookupTimeMs: json['lookup_time_ms'] ?? 0,
+    );
+  }
+  
+  static AnalysisResult _parseAnalysisFromLookup(
+    String productId,
+    Map<String, dynamic> data,
+    List<FamilyMember> familyMembers,
+  ) {
+    final riskFlags = data['risk_flags'] as List<dynamic>? ?? [];
+    final overallScore = (data['overall_score'] as num?)?.toDouble() ?? 
+                         (data['fam_score'] as num?)?.toDouble() ?? 50.0;
+    final recommendations = data['recommendations'] as List<dynamic>? ?? [];
+    
+    // Parse ingredient flags
+    final ingredientFlags = riskFlags.map((flag) {
+      final riskLevelStr = flag['risk_level'] as String? ?? 'low';
+      RiskLevel riskLevel;
+      switch (riskLevelStr.toLowerCase()) {
+        case 'high':
+          riskLevel = RiskLevel.high;
+          break;
+        case 'medium':
+          riskLevel = RiskLevel.medium;
+          break;
+        case 'critical':
+          riskLevel = RiskLevel.critical;
+          break;
+        default:
+          riskLevel = RiskLevel.low;
+      }
+      
+      final affectedProfiles = List<String>.from(flag['affected_profiles'] ?? []);
+      
+      return IngredientFlag(
+        ingredientName: flag['ingredient'] ?? '',
+        canonicalName: flag['canonical_name'] ?? flag['ingredient'] ?? '',
+        riskLevel: riskLevel,
+        explanation: flag['description'] ?? flag['concern'] ?? '',
+        affectedMemberTypes: _parseAffectedTypes(affectedProfiles),
+        affectedConditions: _parseAffectedConds(affectedProfiles),
+        evidenceLink: flag['evidence_url'],
+      );
+    }).toList();
+    
+    // Calculate member-specific risks
+    final memberRisks = familyMembers.map((member) {
+      final relevantFlags = ingredientFlags.where((flag) {
+        return flag.affectedMemberTypes.contains(member.type) ||
+               flag.affectedConditions.any((c) => member.conditions.contains(c));
+      }).toList();
+      
+      RiskLevel memberRisk = RiskLevel.safe;
+      if (relevantFlags.isNotEmpty) {
+        final maxRisk = relevantFlags
+            .map((f) => f.riskLevel.index)
+            .reduce((a, b) => a > b ? a : b);
+        memberRisk = RiskLevel.values[maxRisk];
+      }
+      
+      return MemberRisk(
+        memberId: member.id,
+        memberName: member.name,
+        memberType: member.type,
+        overallRisk: memberRisk,
+        flags: relevantFlags,
+        summary: relevantFlags.isEmpty 
+            ? 'No specific concerns for ${member.name}.'
+            : '${relevantFlags.length} ingredient(s) may require attention for ${member.name}.',
+      );
+    }).toList();
+    
+    // Determine overall risk level
+    RiskLevel overallRisk;
+    if (overallScore >= 80) {
+      overallRisk = RiskLevel.safe;
+    } else if (overallScore >= 60) {
+      overallRisk = RiskLevel.low;
+    } else if (overallScore >= 40) {
+      overallRisk = RiskLevel.medium;
+    } else if (overallScore >= 20) {
+      overallRisk = RiskLevel.high;
+    } else {
+      overallRisk = RiskLevel.critical;
+    }
+    
+    return AnalysisResult(
+      productId: productId,
+      overallScore: overallScore,
+      overallRisk: overallRisk,
+      ingredientFlags: ingredientFlags,
+      memberRisks: memberRisks,
+      explanation: recommendations.isNotEmpty 
+          ? recommendations.join(' ') 
+          : 'Analysis complete. ${ingredientFlags.length} ingredients flagged.',
+    );
+  }
+  
+  static List<MemberType> _parseAffectedTypes(List<String> profiles) {
+    final types = <MemberType>[];
+    for (final profile in profiles) {
+      final lower = profile.toLowerCase();
+      if (lower.contains('child')) types.add(MemberType.child);
+      if (lower.contains('toddler')) types.add(MemberType.toddler);
+      if (lower.contains('pregnant')) types.add(MemberType.pregnant);
+      if (lower.contains('senior') || lower.contains('elderly')) types.add(MemberType.senior);
+      if (lower.contains('adult')) types.add(MemberType.adult);
+    }
+    return types;
+  }
+  
+  static List<HealthCondition> _parseAffectedConds(List<String> profiles) {
+    final conditions = <HealthCondition>[];
+    for (final profile in profiles) {
+      final lower = profile.toLowerCase();
+      if (lower.contains('diabetic') || lower.contains('diabetes')) {
+        conditions.add(HealthCondition.diabetic);
+      }
+      if (lower.contains('hypertensive') || lower.contains('blood pressure')) {
+        conditions.add(HealthCondition.hypertensive);
+      }
+      if (lower.contains('cardiac') || lower.contains('heart')) {
+        conditions.add(HealthCondition.cardiac);
+      }
+      if (lower.contains('celiac')) conditions.add(HealthCondition.celiac);
+      if (lower.contains('lactose')) conditions.add(HealthCondition.lactoseIntolerant);
+      if (lower.contains('gluten')) conditions.add(HealthCondition.glutenSensitive);
+      if (lower.contains('kidney')) conditions.add(HealthCondition.kidneyDisease);
+    }
+    return conditions;
+  }
 }

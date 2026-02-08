@@ -174,6 +174,178 @@ async def health_check():
     """Health check endpoint"""
     return {"status": "healthy", "version": "2.0.0"}
 
+# ==================== Unified Tiered Lookup Endpoint ====================
+
+class TieredLookupRequest(BaseModel):
+    barcode: Optional[str] = None
+    ingredients: Optional[List[str]] = None
+    health_profiles: List[str] = []
+    product_name: Optional[str] = None
+    use_ai_fallback: bool = True
+
+@app.post("/api/lookup")
+async def tiered_product_lookup(request: TieredLookupRequest):
+    """
+    Unified tiered product lookup with optimal performance.
+    
+    Flow:
+    1. Check local database first (fastest, <50ms)
+    2. Fall back to OpenFoodFacts if not found (~200ms)
+    3. Analyze using local risk database (fast)
+    4. Fall back to AI analysis only if needed (~2-5s)
+    5. Cache result for future lookups
+    
+    Returns complete product info with FAM analysis.
+    """
+    import time
+    start_time = time.time()
+    
+    result = {
+        'product': None,
+        'analysis': None,
+        'alternatives': [],
+        'source': None,
+        'cached': False,
+        'lookup_time_ms': 0
+    }
+    
+    health_profiles = request.health_profiles if request.health_profiles else ['adult']
+    
+    # ==================== TIER 1: Local Database ====================
+    if request.barcode:
+        local_product = product_service.get_product_by_barcode(request.barcode)
+        
+        if local_product:
+            result['product'] = {
+                'id': str(local_product.get('id')),
+                'name': local_product.get('name'),
+                'brand': local_product.get('brand'),
+                'barcode': request.barcode,
+                'ingredients': local_product.get('ingredients', []),
+                'image_url': local_product.get('image_url'),
+                'nutrition': local_product.get('nutrition', {})
+            }
+            result['source'] = 'local_database'
+            result['cached'] = True
+            
+            # Check if we have cached analysis
+            if local_product.get('analysis'):
+                result['analysis'] = local_product['analysis']
+                result['alternatives'] = local_product.get('alternatives', [])
+                result['lookup_time_ms'] = int((time.time() - start_time) * 1000)
+                return result
+    
+    # ==================== TIER 2: OpenFoodFacts ====================
+    if request.barcode and not result['product']:
+        try:
+            async with httpx.AsyncClient() as client:
+                off_response = await client.get(
+                    f"https://world.openfoodfacts.org/api/v2/product/{request.barcode}",
+                    params={"fields": "product_name,brands,ingredients_text,image_url,nutriments"},
+                    timeout=5.0
+                )
+                
+                if off_response.status_code == 200:
+                    off_data = off_response.json()
+                    if off_data.get('status') == 1:
+                        off_product = off_data.get('product', {})
+                        
+                        # Parse ingredients
+                        ingredients_text = off_product.get('ingredients_text', '')
+                        ingredients = [i.strip() for i in ingredients_text.split(',') if i.strip()]
+                        
+                        # Parse nutrition
+                        nutriments = off_product.get('nutriments', {})
+                        nutrition = {
+                            'calories': nutriments.get('energy-kcal_100g', 0),
+                            'sugars': nutriments.get('sugars_100g', 0),
+                            'saturated_fat': nutriments.get('saturated-fat_100g', 0),
+                            'sodium': nutriments.get('sodium_100g', 0) * 1000,  # Convert to mg
+                            'fiber': nutriments.get('fiber_100g', 0),
+                            'protein': nutriments.get('proteins_100g', 0)
+                        }
+                        
+                        result['product'] = {
+                            'id': request.barcode,
+                            'name': off_product.get('product_name', 'Unknown Product'),
+                            'brand': off_product.get('brands'),
+                            'barcode': request.barcode,
+                            'ingredients': ingredients,
+                            'image_url': off_product.get('image_url'),
+                            'nutrition': nutrition
+                        }
+                        result['source'] = 'openfoodfacts'
+        except Exception as e:
+            print(f"OpenFoodFacts lookup failed: {e}")
+    
+    # If we have ingredients from request, use those
+    if request.ingredients and not result['product']:
+        result['product'] = {
+            'id': 'manual-entry',
+            'name': request.product_name or 'Manual Entry',
+            'brand': None,
+            'barcode': None,
+            'ingredients': request.ingredients,
+            'image_url': None,
+            'nutrition': {}
+        }
+        result['source'] = 'manual_entry'
+    
+    # ==================== TIER 3: Analysis ====================
+    if result['product'] and result['product'].get('ingredients'):
+        ingredients = result['product']['ingredients']
+        nutrition = result['product'].get('nutrition', {})
+        
+        # Try local risk database analysis first (fast)
+        try:
+            local_analysis = product_service.analyze_ingredients(
+                ingredients,
+                health_profiles,
+                nutrition=nutrition
+            )
+            result['analysis'] = local_analysis
+            
+            # Get alternatives
+            alternatives = product_service.get_alternatives(
+                ingredients=ingredients,
+                health_profiles=health_profiles
+            )
+            result['alternatives'] = alternatives
+            
+        except Exception as e:
+            print(f"Local analysis failed: {e}")
+        
+        # ==================== TIER 4: AI Fallback ====================
+        # Only use AI if:
+        # 1. Local analysis found few/no flags
+        # 2. AI fallback is enabled
+        # 3. We have ingredients to analyze
+        if (request.use_ai_fallback and 
+            result['analysis'] and 
+            len(result['analysis'].get('risk_flags', [])) < 2):
+            try:
+                ai_analysis = await AIIngredientAnalyzer.analyze_ingredients(
+                    ingredients,
+                    health_profiles
+                )
+                
+                if ai_analysis.get('is_ai_analyzed'):
+                    # Merge AI insights with local analysis
+                    result['analysis']['ai_insights'] = ai_analysis.get('risk_flags', [])
+                    result['analysis']['ai_recommendations'] = ai_analysis.get('recommendations', [])
+                    result['analysis']['has_ai_enhancement'] = True
+                    
+            except Exception as e:
+                print(f"AI analysis failed (non-critical): {e}")
+    
+    # ==================== Cache Result ====================
+    # TODO: Cache to local database for future lookups
+    # if result['source'] == 'openfoodfacts' and result['product']:
+    #     product_service.cache_product(result['product'], result['analysis'])
+    
+    result['lookup_time_ms'] = int((time.time() - start_time) * 1000)
+    return result
+
 # ==================== New Database-Backed Endpoints ====================
 
 @app.get("/api/db/search")
