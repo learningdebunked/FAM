@@ -311,6 +311,148 @@ async def run_scraping_pipeline(
         "max_products_per_category": max_products
     }
 
+# ==================== ML-Powered Endpoints ====================
+
+@app.post("/api/ml/analyze")
+async def analyze_with_ml(request: AnalysisRequest):
+    """
+    Analyze product using ML models and knowledge graph
+    
+    Provides:
+    - ML-based health fit score
+    - Knowledge graph explanations with evidence
+    - Personalized adjustments based on user history
+    """
+    try:
+        from services.ml_service import get_ml_service
+        ml_service = get_ml_service()
+        
+        # Build product dict from request
+        product = {
+            'ingredients': request.ingredients,
+            'nutrition': {}  # Can be extended to include nutrition data
+        }
+        
+        health_profiles = request.health_profiles if request.health_profiles else ['adult']
+        
+        analysis = ml_service.analyze_product_ml(
+            product, 
+            health_profiles,
+            user_id=None  # Can be extended to include user_id
+        )
+        
+        return analysis
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/ml/alternatives")
+async def get_ml_alternatives(request: AlternativesRequest):
+    """
+    Get smart alternatives using ML embeddings
+    """
+    try:
+        from services.ml_service import get_ml_service
+        ml_service = get_ml_service()
+        
+        product = {
+            'ingredients': request.ingredients,
+            'category': request.category
+        }
+        
+        health_profiles = request.health_profiles if request.health_profiles else ['adult']
+        
+        alternatives = ml_service.get_smart_alternatives(product, health_profiles)
+        
+        return {"alternatives": alternatives}
+        
+    except Exception as e:
+        return {"alternatives": [], "error": str(e)}
+
+@app.get("/api/ml/ingredient/{ingredient}")
+async def explain_ingredient(
+    ingredient: str,
+    profile: Optional[str] = Query(None, description="Health profile for specific risks")
+):
+    """
+    Get detailed explanation for an ingredient from knowledge graph
+    """
+    try:
+        from services.ml_service import get_ml_service
+        ml_service = get_ml_service()
+        
+        explanation = ml_service.explain_ingredient(ingredient, profile)
+        return explanation
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/ml/profile/{profile}/risks")
+async def get_profile_risks(profile: str):
+    """
+    Get all ingredients risky for a specific health profile
+    """
+    try:
+        from services.ml_service import get_ml_service
+        ml_service = get_ml_service()
+        
+        risks = ml_service.get_profile_risks(profile)
+        return risks
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/ml/feedback")
+async def record_feedback(
+    user_id: str,
+    product_id: str,
+    feedback_type: str,  # 'like', 'dislike', 'swap_accepted', 'swap_rejected'
+    context: Optional[Dict] = None
+):
+    """
+    Record user feedback for personalization
+    """
+    try:
+        from services.ml_service import get_ml_service
+        ml_service = get_ml_service()
+        
+        ml_service.record_user_feedback(user_id, product_id, feedback_type, context)
+        
+        return {"status": "recorded", "feedback_type": feedback_type}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/ml/user/{user_id}/insights")
+async def get_user_insights(user_id: str):
+    """
+    Get personalization insights for a user
+    """
+    try:
+        from services.ml_service import get_ml_service
+        ml_service = get_ml_service()
+        
+        insights = ml_service.get_user_insights(user_id)
+        return insights
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/ml/knowledge-graph/stats")
+async def get_kg_stats():
+    """
+    Get knowledge graph statistics
+    """
+    try:
+        from services.ml_service import get_ml_service
+        ml_service = get_ml_service()
+        
+        stats = ml_service.get_knowledge_graph_stats()
+        return stats
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
