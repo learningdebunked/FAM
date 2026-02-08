@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:provider/provider.dart';
@@ -541,6 +542,18 @@ class _ManualEntrySheetState extends State<_ManualEntrySheet> {
     super.dispose();
   }
 
+  Future<void> _pasteFromClipboard() async {
+    final data = await Clipboard.getData(Clipboard.kTextPlain);
+    if (data != null && data.text != null && data.text!.isNotEmpty) {
+      setState(() {
+        _controller.text = data.text!;
+        _controller.selection = TextSelection.fromPosition(
+          TextPosition(offset: _controller.text.length),
+        );
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -554,12 +567,23 @@ class _ManualEntrySheetState extends State<_ManualEntrySheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            widget.isBarcode ? 'Enter Barcode' : 'Enter Ingredients',
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                widget.isBarcode ? 'Enter Barcode' : 'Enter Ingredients',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              if (!widget.isBarcode)
+                TextButton.icon(
+                  onPressed: _pasteFromClipboard,
+                  icon: const Icon(Icons.paste, size: 18),
+                  label: const Text('Paste'),
+                ),
+            ],
           ),
           const SizedBox(height: 16),
           TextField(
@@ -571,12 +595,20 @@ class _ManualEntrySheetState extends State<_ManualEntrySheet> {
               prefixIcon: Icon(
                 widget.isBarcode ? Icons.qr_code : Icons.text_fields,
               ),
+              suffixIcon: !widget.isBarcode
+                  ? IconButton(
+                      icon: const Icon(Icons.content_paste),
+                      onPressed: _pasteFromClipboard,
+                      tooltip: 'Paste from clipboard',
+                    )
+                  : null,
             ),
             keyboardType: widget.isBarcode
                 ? TextInputType.number
                 : TextInputType.multiline,
             maxLines: widget.isBarcode ? 1 : 5,
             autofocus: true,
+            textInputAction: widget.isBarcode ? TextInputAction.done : TextInputAction.newline,
           ),
           const SizedBox(height: 16),
           SizedBox(

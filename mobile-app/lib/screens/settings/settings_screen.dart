@@ -181,7 +181,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: const Text('Privacy Policy'),
               trailing: const Icon(Icons.chevron_right),
               onTap: () {
-                // TODO: Open privacy policy
+                _showPrivacyPolicy(context);
               },
             ),
             ListTile(
@@ -190,7 +190,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: const Text('Terms of Service'),
               trailing: const Icon(Icons.chevron_right),
               onTap: () {
-                // TODO: Open terms
+                _showTermsOfService(context);
               },
             ),
             ListTile(
@@ -357,7 +357,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
-              // TODO: Implement full data deletion
+              final storage = StorageService();
+              await storage.clearAllData();
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('All data deleted')),
@@ -365,6 +366,85 @@ class _SettingsScreenState extends State<SettingsScreen> {
               }
             },
             child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPrivacyPolicy(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Privacy Policy'),
+        content: const SingleChildScrollView(
+          child: Text(
+            'FAM Privacy Policy\n\n'
+            'Last updated: February 2026\n\n'
+            '1. Data Collection\n'
+            'We collect only the data necessary to provide personalized food recommendations:\n'
+            '• Family member profiles (stored locally on your device)\n'
+            '• Scan history (stored locally on your device)\n'
+            '• API keys (stored securely on your device)\n\n'
+            '2. Data Usage\n'
+            'Your data is used solely to:\n'
+            '• Analyze food products for health compatibility\n'
+            '• Provide personalized recommendations\n'
+            '• Improve app functionality\n\n'
+            '3. Data Sharing\n'
+            'We do not sell or share your personal data with third parties. '
+            'Product analysis may be sent to OpenAI for AI-powered insights, '
+            'but no personally identifiable information is included.\n\n'
+            '4. Data Security\n'
+            'All data is stored locally on your device using encrypted storage. '
+            'We implement industry-standard security measures.\n\n'
+            '5. Your Rights\n'
+            'You can delete all your data at any time through the Settings menu.',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showTermsOfService(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Terms of Service'),
+        content: const SingleChildScrollView(
+          child: Text(
+            'FAM Terms of Service\n\n'
+            'Last updated: February 2026\n\n'
+            '1. Acceptance of Terms\n'
+            'By using FAM, you agree to these terms of service.\n\n'
+            '2. Service Description\n'
+            'FAM provides food analysis and health recommendations based on '
+            'ingredient scanning and family health profiles.\n\n'
+            '3. Medical Disclaimer\n'
+            'FAM is not a substitute for professional medical advice. '
+            'Always consult healthcare providers for medical decisions. '
+            'The app provides general nutritional guidance only.\n\n'
+            '4. User Responsibilities\n'
+            '• Provide accurate health information\n'
+            '• Use the app responsibly\n'
+            '• Keep your API keys secure\n\n'
+            '5. Limitations\n'
+            'We are not liable for decisions made based on app recommendations. '
+            'Product data accuracy depends on external sources.\n\n'
+            '6. Changes to Terms\n'
+            'We may update these terms. Continued use constitutes acceptance.',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
           ),
         ],
       ),

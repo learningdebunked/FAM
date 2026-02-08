@@ -141,4 +141,11 @@ class StorageService {
   Future<void> setDarkMode(bool darkMode) async {
     await _prefs.setBool('dark_mode', darkMode);
   }
+
+  Future<void> clearAllData() async {
+    await _familyBox.clear();
+    await _historyBox.clear();
+    await _feedbackBoxInstance.clear();
+    await _prefs.clear();
+  }
 }

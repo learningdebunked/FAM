@@ -169,7 +169,7 @@ class HomeDashboard extends StatelessWidget {
                 subtitle: 'Find products',
                 color: Colors.orange,
                 onTap: () {
-                  // TODO: Implement search screen
+                  _showSearchDialog(context);
                 },
               ),
             ),
@@ -181,7 +181,7 @@ class HomeDashboard extends StatelessWidget {
                 subtitle: 'Past scans',
                 color: Colors.purple,
                 onTap: () {
-                  // TODO: Implement history screen
+                  _showHistoryBottomSheet(context);
                 },
               ),
             ),
@@ -211,7 +211,7 @@ class HomeDashboard extends StatelessWidget {
                 ),
                 TextButton(
                   onPressed: () {
-                    // Navigate to family profile
+                    context.push('/family-profile');
                   },
                   child: const Text('Manage'),
                 ),
@@ -251,7 +251,7 @@ class HomeDashboard extends StatelessWidget {
     return Card(
       child: InkWell(
         onTap: () {
-          // Navigate to add member
+          context.push('/add-member');
         },
         borderRadius: BorderRadius.circular(16),
         child: Padding(
@@ -309,7 +309,7 @@ class HomeDashboard extends StatelessWidget {
       ),
       child: InkWell(
         onTap: () {
-          // Navigate to add member
+          context.push('/add-member');
         },
         borderRadius: BorderRadius.circular(12),
         child: const Column(
@@ -351,7 +351,7 @@ class HomeDashboard extends StatelessWidget {
                 if (history.isNotEmpty)
                   TextButton(
                     onPressed: () {
-                      // Navigate to full history
+                      _showHistoryBottomSheet(context);
                     },
                     child: const Text('See All'),
                   ),
@@ -394,6 +394,157 @@ class HomeDashboard extends StatelessWidget {
               style: TextStyle(
                 color: Colors.grey[500],
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showSearchDialog(BuildContext context) {
+    final searchController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Search Products'),
+        content: TextField(
+          controller: searchController,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: 'Enter product name or barcode...',
+            prefixIcon: Icon(Icons.search),
+          ),
+          onSubmitted: (value) {
+            Navigator.pop(context);
+            if (value.trim().isNotEmpty) {
+              _performSearch(context, value.trim());
+            }
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              final query = searchController.text.trim();
+              if (query.isNotEmpty) {
+                _performSearch(context, query);
+              }
+            },
+            child: const Text('Search'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _performSearch(BuildContext context, String query) {
+    // If it looks like a barcode, go to scanner flow
+    if (RegExp(r'^\d{8,14}$').hasMatch(query)) {
+      final provider = context.read<ProductProvider>();
+      provider.setProductFromBarcode(query).then((_) {
+        if (provider.currentProduct != null) {
+          context.push('/analysis/${provider.currentProduct!.id}');
+        }
+      });
+    } else {
+      // Show a snackbar for text search (can be expanded later)
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Searching for "$query"...'),
+          action: SnackBarAction(
+            label: 'Scan Instead',
+            onPressed: () => context.push('/scanner'),
+          ),
+        ),
+      );
+    }
+  }
+
+  void _showHistoryBottomSheet(BuildContext context) {
+    final provider = context.read<ProductProvider>();
+    final history = provider.scanHistory;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        minChildSize: 0.3,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (context, scrollController) => Column(
+          children: [
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Scan History',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    '${history.length} items',
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Expanded(
+              child: history.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.history, size: 48, color: Colors.grey[400]),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No scan history yet',
+                            style: TextStyle(color: Colors.grey[600]),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      controller: scrollController,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: history.length,
+                      itemBuilder: (context, index) {
+                        final product = history[index];
+                        return ListTile(
+                          leading: const CircleAvatar(
+                            child: Icon(Icons.fastfood),
+                          ),
+                          title: Text(product.name),
+                          subtitle: Text(product.barcode),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () {
+                            Navigator.pop(context);
+                            context.push('/analysis/${product.id}');
+                          },
+                        );
+                      },
+                    ),
             ),
           ],
         ),

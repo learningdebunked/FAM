@@ -285,7 +285,7 @@ class _AlternativeCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
         onTap: () {
-          // TODO: Navigate to alternative product analysis
+          _showAlternativeDetails(context, alternative);
         },
         borderRadius: BorderRadius.circular(16),
         child: Padding(
@@ -415,7 +415,7 @@ class _AlternativeCard extends StatelessWidget {
                 children: [
                   TextButton.icon(
                     onPressed: () {
-                      // TODO: View full analysis
+                      _showAlternativeDetails(context, alternative);
                     },
                     icon: const Icon(Icons.analytics_outlined, size: 18),
                     label: const Text('View Analysis'),
@@ -454,6 +454,156 @@ class _AlternativeCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showAlternativeDetails(BuildContext context, HealthyAlternative alt) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        minChildSize: 0.3,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (context, scrollController) => SingleChildScrollView(
+          controller: scrollController,
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              Row(
+                children: [
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: AppColors.background,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: alt.imageUrl != null
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.network(alt.imageUrl!, fit: BoxFit.cover),
+                          )
+                        : const Icon(Icons.eco, size: 40, color: AppColors.safe),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          alt.name,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        if (alt.brand != null)
+                          Text(
+                            alt.brand!,
+                            style: TextStyle(color: Colors.grey[600]),
+                          ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.safe.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          '${alt.score.toInt()}',
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.safe,
+                          ),
+                        ),
+                        const Text('FAM Score', style: TextStyle(fontSize: 10, color: AppColors.safe)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Why This Alternative?',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.safe.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.lightbulb_outline, color: AppColors.safe, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(alt.reason)),
+                  ],
+                ),
+              ),
+              if (alt.benefits.isNotEmpty) ...[
+                const SizedBox(height: 24),
+                const Text(
+                  'Health Benefits',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+                ...alt.benefits.map((benefit) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.check_circle, color: AppColors.safe, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(child: Text(benefit)),
+                        ],
+                      ),
+                    )),
+              ],
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Added ${alt.name} to your shopping list'),
+                        action: SnackBarAction(label: 'Undo', onPressed: () {}),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.add_shopping_cart),
+                  label: const Text('Add to Shopping List'),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
