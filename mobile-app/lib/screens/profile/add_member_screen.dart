@@ -369,7 +369,13 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                 runSpacing: 8,
                 children: _allergies.map((allergy) {
                   return Chip(
-                    label: Text(allergy),
+                    label: Text(
+                      allergy,
+                      style: TextStyle(
+                        color: AppColors.riskHigh,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                     deleteIcon: const Icon(Icons.close, size: 18),
                     onDeleted: () {
                       setState(() {
@@ -378,6 +384,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                     },
                     backgroundColor: AppColors.riskHigh.withOpacity(0.1),
                     deleteIconColor: AppColors.riskHigh,
+                    side: BorderSide(color: AppColors.riskHigh.withOpacity(0.3)),
                   );
                 }).toList(),
               ),
@@ -397,8 +404,16 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                 'Shellfish',
               ].where((a) => !_allergies.contains(a)).map((suggestion) {
                 return ActionChip(
-                  label: Text(suggestion),
-                  avatar: const Icon(Icons.add, size: 16),
+                  label: Text(
+                    suggestion,
+                    style: const TextStyle(
+                      color: Colors.black87,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  avatar: Icon(Icons.add, size: 16, color: AppColors.primary),
+                  backgroundColor: Colors.grey[100],
+                  side: BorderSide(color: Colors.grey[300]!),
                   onPressed: () {
                     setState(() {
                       _allergies.add(suggestion);

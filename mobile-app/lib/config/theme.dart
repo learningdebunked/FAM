@@ -113,11 +113,19 @@ class AppTheme {
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.background,
         selectedColor: AppColors.primaryLight,
-        labelStyle: const TextStyle(fontSize: 14),
+        labelStyle: const TextStyle(
+          fontSize: 14,
+          color: AppColors.textPrimary,
+        ),
+        secondaryLabelStyle: const TextStyle(
+          fontSize: 14,
+          color: AppColors.textPrimary,
+        ),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
+        side: BorderSide(color: AppColors.divider),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: AppColors.surface,
