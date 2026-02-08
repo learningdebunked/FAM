@@ -50,20 +50,20 @@ class _HomeScreenState extends State<HomeScreen> {
               _currentIndex = index;
             });
           },
-          items: const [
+          items: [
             BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home),
+              icon: Icon(Icons.home_outlined, key: const Key('nav_home_icon')),
+              activeIcon: Icon(Icons.home, key: const Key('nav_home_active_icon')),
               label: 'Home',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.qr_code_scanner_outlined),
-              activeIcon: Icon(Icons.qr_code_scanner),
+              icon: Icon(Icons.qr_code_scanner_outlined, key: const Key('nav_scan_icon')),
+              activeIcon: Icon(Icons.qr_code_scanner, key: const Key('nav_scan_active_icon')),
               label: 'Scan',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.family_restroom_outlined),
-              activeIcon: Icon(Icons.family_restroom),
+              icon: Icon(Icons.family_restroom_outlined, key: const Key('nav_family_icon')),
+              activeIcon: Icon(Icons.family_restroom, key: const Key('nav_family_active_icon')),
               label: 'Family',
             ),
           ],
